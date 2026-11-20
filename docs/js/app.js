@@ -13,9 +13,50 @@
   'use strict';
 
   const App = (window.App = {
-    pages: {},        // pages enregistrées : chemin -> { title, render(ctx) }
+    pages: {},        // pages enregistrées : chemin -> { titleKey, render(ctx) }
     _cache: {},       // fichiers de données déjà téléchargés
   });
+
+  /* ------------------------------------------------------------------ */
+  /* Langue (anglais par défaut, français au choix)                     */
+  /* ------------------------------------------------------------------ */
+
+  App.I18N = {};                 // dictionnaires : js/i18n/en.js et js/i18n/fr.js
+  App.LANGS = ['en', 'fr'];
+  App.LANG_KEY = 'dashboard-lang';
+  App.lang = (function () {
+    let l = null;
+    try { l = new URLSearchParams(location.search).get('lang'); } catch (e) { /* navigateur ancien */ }
+    if (App.LANGS.indexOf(l) >= 0) {
+      try { localStorage.setItem(App.LANG_KEY, l); } catch (e) { /* stockage indisponible */ }
+      return l;
+    }
+    try { l = localStorage.getItem(App.LANG_KEY); } catch (e) { l = null; }
+    return App.LANGS.indexOf(l) >= 0 ? l : 'en';
+  })();
+
+  /** Texte traduit. Les {paramètres} sont remplacés par les valeurs données. */
+  App.t = function (key, params) {
+    const d = App.I18N[App.lang] || {}, fb = App.I18N.en || {};
+    let s = d[key] !== undefined ? d[key] : (fb[key] !== undefined ? fb[key] : key);
+    if (params) {
+      s = s.replace(/\{(\w+)\}/g, function (m, k) { return params[k] !== undefined ? params[k] : m; });
+    }
+    return s;
+  };
+
+  /** Nom d'une denrée dans la langue choisie (les données gardent le nom français d'origine). */
+  App.product = function (name) {
+    const p = (App.I18N[App.lang] || {}).products || {};
+    return p[name] || name;
+  };
+
+  /** Tri alphabétique selon la langue choisie. */
+  App.sortBy = function (arr, label) {
+    return arr.slice().sort(function (a, b) {
+      return label(a).localeCompare(label(b), App.lang, { sensitivity: 'base' });
+    });
+  };
 
   /* ------------------------------------------------------------------ */
   /* Données                                                             */
@@ -26,7 +67,7 @@
     if (!App._cache[path]) {
       App._cache[path] = fetch('data/' + path)
         .then(function (r) {
-          if (!r.ok) throw new Error('Fichier introuvable : data/' + path + ' (HTTP ' + r.status + ')');
+          if (!r.ok) throw new Error(App.t('error.file', { path: path, status: r.status }));
           return r.json();
         })
         .catch(function (err) {
@@ -98,16 +139,22 @@
   /* ------------------------------------------------------------------ */
 
   const formatters = {};
-  /** Nombre en français : 16 801 ; 2,6 ; « — » si la valeur manque. */
+  /** Nombre dans la langue choisie : 16 801 / 16,801 ; 2,6 / 2.6 ; « — » si la valeur manque. */
   App.fmt = function (v, digits) {
     digits = digits || 0;
     if (v === null || v === undefined || Number.isNaN(v)) return '—';
-    if (!formatters[digits]) {
-      formatters[digits] = new Intl.NumberFormat('fr-FR', {
+    const key = App.lang + digits;
+    if (!formatters[key]) {
+      formatters[key] = new Intl.NumberFormat(App.lang === 'fr' ? 'fr-FR' : 'en-US', {
         minimumFractionDigits: digits, maximumFractionDigits: digits,
       });
     }
-    return formatters[digits].format(v).replace(/ /g, ' ');
+    return formatters[key].format(v).replace(/\u202f/g, '\u00a0');
+  };
+
+  /** Pourcentage : « 1,5 % » en français, « 1.5% » en anglais. */
+  App.pct = function (v, digits) {
+    return App.fmt(v, digits) + (App.lang === 'fr' ? '\u00a0%' : '%');
   };
 
   App.esc = function (s) {
@@ -134,13 +181,9 @@
   /** Bloc d'erreur lisible (affiché à la place d'un graphique ou d'une page). */
   App.errorBox = function (err) {
     let hint = '';
-    if (location.protocol === 'file:') {
-      hint = '<br><small>Le site est ouvert directement depuis un fichier : les navigateurs bloquent alors la lecture '
-        + 'des données. Publiez-le sur GitHub Pages ou lancez un petit serveur local '
-        + '(<code>python -m http.server</code> dans le dossier <code>docs/</code>), voir README.</small>';
-    }
+    if (location.protocol === 'file:') hint = '<br><small>' + App.t('error.fileProtocol') + '</small>';
     return '<div class="alert alert-danger mb-0" role="alert">' + App.icon('exclamation-triangle-fill', 'me-2')
-      + 'Impossible de charger les données. ' + App.esc(err && err.message ? err.message : err) + hint + '</div>';
+      + App.t('error.load') + ' ' + App.esc(err && err.message ? err.message : err) + hint + '</div>';
   };
 
   /* ------------------------------------------------------------------ */
@@ -215,7 +258,7 @@
       paper_bgcolor: 'white', plot_bgcolor: '#E5ECF6',
       colorway: App.COLORWAY,
       hovermode: 'closest', hoverlabel: { align: 'left' },
-      separators: ', ',
+      separators: App.lang === 'fr' ? ', ' : '.,',
       xaxis: AXIS, yaxis: AXIS,
       title: { x: 0.05 },
     };
@@ -223,7 +266,8 @@
   };
 
   /** Légende à droite sur grand écran, horizontale (au-dessus ou en dessous) sur téléphone. */
-  App.isNarrow = function (el) { return !!(el && el.clientWidth && el.clientWidth < 600); };
+  /** Écran de téléphone (moins de 576 px de large) : graphiques en version compacte. */
+  App.isNarrow = function () { return window.innerWidth < 576; };
 
   App.legend = function (el, title, where) {
     const narrow = App.isNarrow(el);
@@ -235,7 +279,7 @@
   };
 
   App.plotConfig = function (extra) {
-    return Object.assign({ displaylogo: false, responsive: true, locale: 'fr' }, extra || {});
+    return Object.assign({ displaylogo: false, responsive: true, locale: App.lang === 'fr' ? 'fr' : 'en' }, extra || {});
   };
 
   /** Couleurs « Viridis » de Plotly. */

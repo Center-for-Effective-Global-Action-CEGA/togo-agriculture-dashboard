@@ -1,4 +1,4 @@
-/* Page « Prédictions » (adresse #/predictions).
+/* Page « Prédictions » / "Predictions" (adresse #/predictions).
  * Reprend pages/results.py et graphs/graphs.py (plot_results, graph_plot_yield) :
  *   - choix du trimestre ;
  *   - couches Parcelles (cultivées / non agricoles), Cultures (maïs, soja) et Rendements ;
@@ -6,18 +6,25 @@
  *   - panneau « Récapitulatif » (surfaces) et graphique des rendements par région (ridgeplot) ;
  *   - export CSV / GeoJSON de ce qui est affiché, fabriqué dans le navigateur.
  * Tout fonctionne sans serveur : les données de chaque trimestre sont lues à la demande.
+ * Quand on change de langue, la page est redessinée avec les mêmes choix (trimestre, couches, vue).
  */
 (function () {
   'use strict';
   const App = window.App;
 
-  const CROPS = { MAIS: '🌽 Maïs', SOJA: '🌱 Soja' };
+  const CROP_KEYS = ['MAIS', 'SOJA'];
   const CROP_COLORS = { MAIS: 'yellow', SOJA: 'blue' };
   const CROP_BITS = { MAIS: { known: 8, yes: 2 }, SOJA: { known: 16, yes: 4 } };
+  // Libellés des lignes du récapitulatif dans les données (summary.json) -> clé de traduction
+  const INSIGHT_KEYS = { 'Cultivées': 'layer.cultivated', '🌽 Maïs': 'crop.MAIS', '🌱 Soja': 'crop.SOJA' };
   // Couleurs Viridis « plotly.express » utilisées par la bibliothèque ridgeplot
   const PX_VIRIDIS = ['#440154', '#482878', '#3e4989', '#31688e', '#26828e', '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde725'];
   const N_COLORS = 64;
 
+  // Choix de l'utilisateur, gardés quand la page est redessinée après un changement de langue
+  let memo = null;
+
+  function crop(key) { return App.t('crop.' + key); }
   function round(v, d) { const f = Math.pow(10, d); return Math.round(v * f) / f; }
 
   /* ---------- Couches de la carte ---------- */
@@ -33,20 +40,19 @@
       if (c & 4) soja.push(i);
     }
     const hover = function (k, i) {
-      return '<b>' + App.fmt(parc.pct[i], 2) + ' %</b> de surface cultivée<br>Région : '
-        + App.esc(grid.regionTitle[grid.region[i]]);
+      return App.t('hover.pct', { v: App.pct(parc.pct[i], 2), region: App.esc(grid.regionTitle[grid.region[i]]) });
     };
     return {
-      agri: { id: 'agri', group: 'parcel', name: 'Cultivées', color: 'darkgreen', radius: 2.5, indices: Int32Array.from(agri), hover: hover },
-      non: { id: 'non', group: 'parcel', name: 'Non agricoles', color: 'grey', radius: 2.5, indices: Int32Array.from(non), hover: hover },
-      MAIS: { id: 'MAIS', group: 'crop', name: CROPS.MAIS, color: CROP_COLORS.MAIS, radius: 2.5, indices: Int32Array.from(mais), hover: null },
-      SOJA: { id: 'SOJA', group: 'crop', name: CROPS.SOJA, color: CROP_COLORS.SOJA, radius: 2.5, indices: Int32Array.from(soja), hover: null },
+      agri: { id: 'agri', group: 'parcel', name: App.t('layer.cultivated'), color: 'darkgreen', radius: 2.5, indices: Int32Array.from(agri), hover: hover },
+      non: { id: 'non', group: 'parcel', name: App.t('layer.nonagri'), color: 'grey', radius: 2.5, indices: Int32Array.from(non), hover: hover },
+      MAIS: { id: 'MAIS', group: 'crop', name: crop('MAIS'), color: CROP_COLORS.MAIS, radius: 2.5, indices: Int32Array.from(mais), hover: null },
+      SOJA: { id: 'SOJA', group: 'crop', name: crop('SOJA'), color: CROP_COLORS.SOJA, radius: 2.5, indices: Int32Array.from(soja), hover: null },
     };
   }
 
   /** Couche des rendements : couleur selon le logarithme du rendement (comme l'original). */
-  function buildYieldLayer(grid, rend, crop) {
-    const c = rend.crops[crop];
+  function buildYieldLayer(grid, rend, key) {
+    const c = rend.crops[key];
     const n = c.didx.length;
     const idx = new Int32Array(n);
     let acc = 0;
@@ -60,11 +66,11 @@
     const span = cmax - cmin || 1;
     for (let k = 0; k < n; k++) colorIndex[k] = Math.round((logs[k] - cmin) / span * (N_COLORS - 1));
     return {
-      id: 'yield-' + crop, group: 'yield', name: 'Rendement - ' + CROPS[crop], radius: 2.5,
+      id: 'yield-' + key, group: 'yield', name: App.t('pred.yieldOf', { crop: crop(key) }), radius: 2.5,
       indices: idx, values: c.v, palette: palette, colorIndex: colorIndex,
-      swatch: App.viridisCSS('to right'), cmin: cmin, cmax: cmax, crop: crop,
+      swatch: App.viridisCSS('to right'), cmin: cmin, cmax: cmax, crop: key,
       hover: function (k, i) {
-        return '<b>Rendement</b> : ' + App.fmt(c.v[k], 0) + ' kg/ha<br>Région : ' + App.esc(grid.regionTitle[grid.region[i]]);
+        return App.t('pred.hoverYield', { v: App.fmt(c.v[k], 0), region: App.esc(grid.regionTitle[grid.region[i]]) });
       },
     };
   }
@@ -86,7 +92,7 @@
     if (ticks.length < 2) {
       ticks = [{ v: layer.cmin, label: App.fmt(lo, 0) }, { v: layer.cmax, label: App.fmt(hi, 0) }];
     }
-    return { title: 'kg/ha (échelle log)', min: layer.cmin, max: layer.cmax, ticks: ticks };
+    return { title: App.t('pred.cbTitle'), min: layer.cmin, max: layer.cmax, ticks: ticks };
   }
 
   /* ---------- Graphique des rendements par région (ridgeplot) ---------- */
@@ -109,9 +115,9 @@
     return out;
   }
 
-  function ridgeFigure(el, ridge, crop) {
+  function ridgeFigure(el, ridge, key) {
     if (!ridge) {
-      el.innerHTML = '<p class="text-muted small p-2 mb-0">Pas assez de rendements pour tracer les courbes.</p>';
+      el.innerHTML = '<p class="text-muted small p-2 mb-0">' + App.t('pred.ridge.none') + '</p>';
       return;
     }
     const spacing = 0.5, yMax = ridge.y_max, x0 = ridge.x_min, x1 = ridge.x_max, span = (x1 - x0) || 1;
@@ -132,21 +138,21 @@
         type: 'scatter', x: x, y: y, mode: 'lines', fill: 'tonexty', name: row.label,
         fillgradient: { type: 'horizontal', colorscale: sliceViridis((row.x0 - x0) / span, (row.x1 - x0) / span) },
         line: { color: 'black', width: 1.5 }, customdata: dens,
-        hovertemplate: '<b>' + row.label + '</b><br>%{x:,.0f} kg/ha<br>' + App.fmt(row.n, 0) + ' cellules<extra></extra>',
+        hovertemplate: '<b>' + row.label + '</b><br>%{x:,.0f} kg/ha<br>' + App.t('pred.ridge.cells', { n: App.fmt(row.n, 0) }) + '<extra></extra>',
       });
     });
     App.plot(el, traces, App.layout({
       font: { size: 16 },
-      title: { text: 'Rendement - ' + CROPS[crop], font: { size: 14 } },
+      title: { text: App.t('pred.yieldOf', { crop: crop(key) }), font: { size: 14 } },
       xaxis: { title: { text: 'kg/ha', font: { size: 13 } }, range: [x0 - 0.05 * span, x1 + 0.05 * span], zeroline: false },
-      yaxis: { tickmode: 'array', tickvals: tickvals, ticktext: ticktext, tickfont: { size: 10 }, title: { text: 'Régions', font: { size: 13 } }, zeroline: false, showgrid: true },
+      yaxis: { tickmode: 'array', tickvals: tickvals, ticktext: ticktext, tickfont: { size: 10 }, title: { text: App.t('pred.ridge.regions'), font: { size: 13 } }, zeroline: false, showgrid: true },
       showlegend: false,
       margin: { r: 10, t: 40, l: 10, b: 10 },
       height: 300,
     }), App.plotConfig({ displayModeBar: false }));
   }
 
-  /* ---------- Export ---------- */
+  /* ---------- Export (colonnes et noms de fichiers identiques à l'original) ---------- */
 
   function exportTable(state, grid, parc, rend) {
     const Q = state.quarter;
@@ -156,7 +162,7 @@
     const reg = function (i) { return grid.regions[grid.region[i]]; };
     const pct = function (i) { return parc.pct[i]; };
     const nonag = function (i) { return parc.pct[i] === null ? null : round(100 - parc.pct[i], 2); };
-    const crop = function (i, c) {
+    const cropValue = function (i, c) {
       const b = CROP_BITS[c], code = parc.code[i];
       return (code & b.known) ? ((code & b.yes) ? 1 : 0) : null;
     };
@@ -175,7 +181,7 @@
     if (state.crop) {
       return { suffix: '_crops',
         columns: ['unique_id', 'lat', 'lon', 'region', 'quarter', 'MAIS', 'SOJA'],
-        rows: cells.map(function (i) { return [grid.id(i), grid.lat[i], grid.lon[i], reg(i), Q, crop(i, 'MAIS'), crop(i, 'SOJA')]; }) };
+        rows: cells.map(function (i) { return [grid.id(i), grid.lat[i], grid.lon[i], reg(i), Q, cropValue(i, 'MAIS'), cropValue(i, 'SOJA')]; }) };
     }
     if (state.parcel) {
       return { suffix: '_parcels',
@@ -185,7 +191,7 @@
     return { suffix: '',
       columns: ['unique_id', 'lat', 'lon', 'region', 'pct_agri', 'pct_nonag', 'maj_cls', 'quarter', 'MAIS', 'SOJA', 'area'],
       rows: cells.map(function (i) {
-        return [grid.id(i), grid.lat[i], grid.lon[i], reg(i), pct(i), nonag(i), parc.code[i] & 1, Q, crop(i, 'MAIS'), crop(i, 'SOJA'), grid.area[i]];
+        return [grid.id(i), grid.lat[i], grid.lon[i], reg(i), pct(i), nonag(i), parc.code[i] & 1, Q, cropValue(i, 'MAIS'), cropValue(i, 'SOJA'), grid.area[i]];
       }) };
   }
 
@@ -197,51 +203,59 @@
   }
 
   App.pages['/predictions'] = {
-    title: 'Prédictions',
+    titleKey: 'page.predictions',
     render: function (ctx) {
       const el = ctx.el;
       return Promise.all([App.data('summary.json'), App.grid()]).then(function (res) {
         if (!ctx.alive()) return;
         const s = res[0], grid = res[1];
         const quarters = s.quarters_desc;
-        const state = { quarter: quarters[0], parcel: true, crop: false, yld: false, yieldCrop: 'MAIS', basemap: 'open-street-map' };
-        const hiddenIds = new Set();
+        const keep = ctx.keepState && memo;
+        const state = keep ? memo.state
+          : { quarter: quarters[0], parcel: true, crop: false, yld: false, yieldCrop: 'MAIS', basemap: 'open-street-map', recapHidden: false };
+        const hiddenIds = keep ? memo.hiddenIds : new Set();
+        memo = { state: state, hiddenIds: hiddenIds, view: keep ? memo.view : null };
 
-        el.innerHTML = '<h3>Prédictions</h3>'
+        el.innerHTML = '<h3>' + App.t('page.predictions') + '</h3>'
           + '<div class="filter-bar">'
-          + '<div class="filter-group"><label class="filter-label" for="res-quarter">Trimestre</label>'
+          + '<div class="filter-group"><label class="filter-label" for="res-quarter">' + App.t('pred.quarter') + '</label>'
           + '<select id="res-quarter" class="form-select form-select-sm quarter-dropdown">'
-          + quarters.map(function (q) { return '<option value="' + q + '">' + q + '</option>'; }).join('') + '</select></div>'
-          + switchHTML('sw-parcel', 'Parcelles', true) + switchHTML('sw-crop', 'Cultures', false) + switchHTML('sw-yield', 'Rendements', false)
+          + quarters.map(function (q) { return '<option value="' + q + '"' + (q === state.quarter ? ' selected' : '') + '>' + q + '</option>'; }).join('') + '</select></div>'
+          + switchHTML('sw-parcel', App.t('pred.sw.parcel'), state.parcel) + switchHTML('sw-crop', App.t('pred.sw.crop'), state.crop)
+          + switchHTML('sw-yield', App.t('pred.sw.yield'), state.yld)
           + '<div class="ms-auto dropdown export-menu">'
           + '<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-dropdown-toggle aria-expanded="false">'
-          + App.icon('download', 'me-1') + 'Exporter</button>'
+          + App.icon('download', 'me-1') + App.t('pred.export') + '</button>'
           + '<ul class="dropdown-menu dropdown-menu-end">'
           + '<li><button type="button" class="dropdown-item" data-format="csv">CSV (.csv)</button></li>'
           + '<li><button type="button" class="dropdown-item" data-format="geojson">GeoJSON (.geojson)</button></li>'
           + '<li><hr class="dropdown-divider"></li><li><span class="dropdown-item-text export-hint"></span></li>'
           + '</ul></div></div>'
           + '<div class="map-wrapper">'
-          + '<div id="res-map" class="pred-map" aria-label="Carte des prédictions"></div>'
+          + '<div id="res-map" class="pred-map" aria-label="' + App.t('pred.map.aria') + '"></div>'
           + '<div class="map-controls">'
-          + '<select id="map-style" class="form-select form-select-sm map-control" aria-label="Fond de carte">'
-          + Object.keys(App.BASEMAPS).map(function (k) { return '<option value="' + k + '">' + App.BASEMAPS[k].label + '</option>'; }).join('')
+          + '<select id="map-style" class="form-select form-select-sm map-control" aria-label="' + App.t('map.basemap') + '">'
+          + Object.keys(App.BASEMAPS).map(function (k) {
+            return '<option value="' + k + '"' + (k === state.basemap ? ' selected' : '') + '>' + App.BASEMAPS[k].label + '</option>';
+          }).join('')
           + '</select>'
-          + '<select id="yield-crop" class="form-select form-select-sm map-control" aria-label="Culture des rendements" hidden>'
-          + Object.keys(CROPS).map(function (k) { return '<option value="' + k + '">Rendement - ' + CROPS[k] + '</option>'; }).join('')
+          + '<select id="yield-crop" class="form-select form-select-sm map-control" aria-label="' + App.t('pred.yieldCrop') + '" hidden>'
+          + CROP_KEYS.map(function (k) {
+            return '<option value="' + k + '"' + (k === state.yieldCrop ? ' selected' : '') + '>' + App.t('pred.yieldOf', { crop: crop(k) }) + '</option>';
+          }).join('')
           + '</select></div>'
           + '<div class="recap-panel">'
           + '<div class="recap-header" role="button" tabindex="0" aria-expanded="true" aria-controls="recap-body">'
-          + '<span>Récapitulatif</span>' + App.icon('chevron-up', 'recap-chevron') + '</div>'
+          + '<span>' + App.t('pred.recap') + '</span>' + App.icon('chevron-up', 'recap-chevron') + '</div>'
           + '<div id="recap-body" class="recap-body"><div class="recap-table"></div>'
           + '<div class="parcel-ridgeplot" hidden></div></div></div>'
           + '</div>'
-          + '<p class="small text-muted mt-2 mb-0">Survolez (ou touchez) un point pour afficher ses valeurs. '
-          + 'Cliquez sur une entrée de la légende pour masquer ou afficher la couche correspondante.</p>';
+          + '<p class="small text-muted mt-2 mb-0">' + App.t('pred.hint') + '</p>';
 
         const $ = function (sel) { return el.querySelector(sel); };
         const wrapper = $('.map-wrapper');
-        const map = App.createMap($('#res-map'));
+        const map = App.createMap($('#res-map'), { basemap: state.basemap });
+        if (memo.view) map.setView(memo.view.center, memo.view.zoom, { animate: false });
         const loading = App.mapLoading(wrapper);
         const legend = new App.MapLegend().addTo(map);
         const pointLayer = new App.PointLayer(grid).addTo(map);
@@ -269,27 +283,27 @@
 
           // Légende : seulement les groupes affichés (comme la légende Plotly)
           const groups = [];
-          if (state.parcel) groups.push({ title: 'Parcelles', items: [base.agri, base.non] });
-          if (state.crop) groups.push({ title: 'Cultures', items: [base.MAIS, base.SOJA] });
-          if (state.yld && yieldLayer) groups.push({ title: 'Rendements', items: [yieldLayer], colorbar: yieldColorbar(yieldLayer) });
+          if (state.parcel) groups.push({ title: App.t('legend.plots'), items: [base.agri, base.non] });
+          if (state.crop) groups.push({ title: App.t('legend.crops'), items: [base.MAIS, base.SOJA] });
+          if (state.yld && yieldLayer) groups.push({ title: App.t('legend.yields'), items: [yieldLayer], colorbar: yieldColorbar(yieldLayer) });
           legend.update(groups, function (it) {
             if (it.hidden) hiddenIds.add(it.id); else hiddenIds.delete(it.id);
             pointLayer.refresh();
           });
 
-          // Récapitulatif
+          // Récapitulatif (les valeurs viennent de summary.json ; seuls les libellés sont traduits)
           const show = [];
           if (state.parcel) show.push('Cultivées');
-          if (state.crop) show.push(CROPS.MAIS, CROPS.SOJA);
+          if (state.crop) show.push('🌽 Maïs', '🌱 Soja');
           const rows = (s.insights[state.quarter] || []).filter(function (r) { return show.indexOf(r[0]) >= 0; });
           const tableBox = $('.recap-table');
           if (rows.length) {
-            tableBox.innerHTML = App.table(['Surfaces', 'Superficie (km²)', 'Superficie (%)'],
-              rows.map(function (r) { return [r[0], App.fmt(r[1], 0), App.fmt(r[2], 0)]; }), 'recap');
+            tableBox.innerHTML = App.table([App.t('pred.recap.col1'), App.t('pred.recap.col2'), App.t('pred.recap.col3')],
+              rows.map(function (r) { return [INSIGHT_KEYS[r[0]] ? App.t(INSIGHT_KEYS[r[0]]) : r[0], App.fmt(r[1], 0), App.fmt(r[2], 0)]; }), 'recap');
           } else if (state.yld) {
             tableBox.innerHTML = '';
           } else {
-            tableBox.innerHTML = '<p class="text-muted small p-3 mb-0">Activez « Parcelles » ou « Cultures » pour afficher les surfaces.</p>';
+            tableBox.innerHTML = '<p class="text-muted small p-3 mb-0">' + App.t('pred.recap.empty') + '</p>';
           }
           const ridgeBox = $('.parcel-ridgeplot');
           ridgeBox.hidden = !(state.yld && rend);
@@ -297,9 +311,9 @@
           else if (ridgeBox.classList.contains('js-plotly-plot')) Plotly.purge(ridgeBox);
 
           // Ce que l'export va contenir
-          const what = state.yld ? 'rendements (' + CROPS[state.yieldCrop] + ')' : state.crop ? 'cultures (maïs, soja)'
-            : state.parcel ? 'parcelles' : 'toutes les colonnes';
-          $('.export-hint').textContent = 'Exporte : ' + what + ', ' + state.quarter;
+          const what = state.yld ? App.t('pred.what.yield', { crop: crop(state.yieldCrop) }) : state.crop ? App.t('pred.what.crop')
+            : state.parcel ? App.t('pred.what.parcel') : App.t('pred.what.all');
+          $('.export-hint').textContent = App.t('pred.exportHint', { what: what, q: state.quarter });
         }
 
         function load() {
@@ -355,14 +369,15 @@
           map.setBasemap(state.basemap);
         });
         const recapHeader = $('.recap-header');
-        function toggleRecap() {
-          const body = $('#recap-body');
-          body.hidden = !body.hidden;
-          recapHeader.setAttribute('aria-expanded', String(!body.hidden));
-          recapHeader.querySelector('use').setAttribute('href', body.hidden ? '#bi-chevron-down' : '#bi-chevron-up');
+        function setRecap(hidden) {
+          $('#recap-body').hidden = hidden;
+          recapHeader.setAttribute('aria-expanded', String(!hidden));
+          recapHeader.querySelector('use').setAttribute('href', hidden ? '#bi-chevron-down' : '#bi-chevron-up');
         }
+        function toggleRecap() { state.recapHidden = !state.recapHidden; setRecap(state.recapHidden); }
         recapHeader.addEventListener('click', toggleRecap);
         recapHeader.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleRecap(); } });
+        if (state.recapHidden) setRecap(true);
 
         el.querySelectorAll('[data-format]').forEach(function (btn) {
           btn.addEventListener('click', function () {
@@ -380,7 +395,11 @@
 
         setSwitches();
         load();
-        return function cleanup() { exportMenu.destroy(); map.remove(); };
+        return function cleanup() {
+          memo.view = { center: map.getCenter(), zoom: map.getZoom() };
+          exportMenu.destroy();
+          map.remove();
+        };
       });
     },
   };

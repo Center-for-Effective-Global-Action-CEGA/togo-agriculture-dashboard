@@ -52,6 +52,17 @@ indique que le site est en ligne.
 Ouvrez le dossier concerné dans le dépôt (par exemple `docs/data`), cliquez sur **Add file** → **Upload files**,
 glissez le nouveau fichier (même nom) et validez avec **Commit changes** : il remplace l'ancien.
 
+## Langues (anglais / français)
+
+Le site s'affiche en **anglais par défaut**. Le sélecteur **FR | EN** en haut à droite change la langue
+immédiatement ; le choix est gardé pendant la navigation et pour les visites suivantes. Pour partager un lien
+dans une langue précise, ajoutez `?lang=fr` ou `?lang=en` à l'adresse (ex. `…/<nom-du-repo>/?lang=fr`).
+
+Tous les textes affichés sont dans deux fichiers : `js/i18n/en.js` (anglais) et `js/i18n/fr.js` (français).
+Pour corriger une traduction, modifiez le texte à droite des deux-points dans le fichier concerné (directement
+sur GitHub : ouvrez le fichier, cliquez sur le crayon ✏️, puis **Commit changes**). Les textes des modèles
+(page « Performances des modèles ») sont dans `data/models.json`, produit par le script de préparation.
+
 ## Adresses des pages
 
 `…/<nom-du-repo>/` (tableau de bord), `#/predictions`, `#/price`, `#/ndvi-map`, `#/modeles`, `#/aide`.
@@ -82,7 +93,7 @@ Envoyez ensuite les nouveaux fichiers de `docs/data/` sur GitHub (voir « Mettre
 | `index.html` | point d'entrée : menu, barre du haut, avertissement « Version de démonstration » |
 | `css/custom.css` | style de l'application Dash d'origine, conservé tel quel |
 | `css/static.css` | compléments (icônes, tableaux, cartes, légendes) |
-| `js/` | navigation (`main.js`), outils communs (`app.js`), cartes (`maps.js`), une page par fichier (`pages/`) |
+| `js/` | navigation et langue (`main.js`), outils communs (`app.js`), cartes (`maps.js`), une page par fichier (`pages/`), traductions (`i18n/`) |
 | `data/` | données pré-calculées (JSON / GeoJSON), chargées seulement quand une page en a besoin |
 | `lib/` | bibliothèques copiées localement (aucun CDN) : Plotly.js 3.7, Leaflet 1.9.4, Bootstrap 5.3 (CSS), police Inter |
 | `assets/` | logo |

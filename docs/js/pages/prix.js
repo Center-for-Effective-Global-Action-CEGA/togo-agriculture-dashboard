@@ -1,11 +1,17 @@
-/* Page « Carte des Prix » (adresse #/price).
+/* Page « Carte des Prix » / "Price Map" (adresse #/price).
  * Reprend pages/price.py :
  *   - onglet « Graphiques » : évolution mensuelle des prix (zone au choix) et boîtes à moustaches par zone ;
  *   - onglet « Cartes » : prix moyen annuel par préfecture, avec comparaison de deux cartes côte à côte.
+ * Les noms des denrées restent en français dans les données ; ils sont traduits à l'affichage (App.product).
+ * Quand on change de langue, la page est redessinée avec les mêmes choix (onglet, denrées, zone, cartes).
  */
 (function () {
   'use strict';
   const App = window.App;
+
+  // Choix de l'utilisateur, gardés quand la page est redessinée après un changement de langue
+  let memo = null;
+  function freshMemo() { return { tab: 'graphs', selected: null, zone: null, compare: false, sameScale: false, cards: null }; }
 
   /* ---------- Onglet Graphiques ---------- */
 
@@ -30,9 +36,9 @@
     const lineEl = root.querySelector('#price-graph'), boxEl = root.querySelector('#box-plot');
     const zi = d.zones.indexOf(zone);
     const narrow = App.isNarrow(lineEl);
-    const common = { legend: App.legend(lineEl, 'Denrée', 'bottom') };
+    const common = { legend: App.legend(lineEl, App.t('price.legend'), 'bottom') };
     if (!selected.length) {
-      App.plot(lineEl, [], App.layout({ title: { text: 'Aucune denrée sélectionnée' } }));
+      App.plot(lineEl, [], App.layout({ title: { text: App.t('price.none') } }));
       App.plot(boxEl, [], App.layout({}));
       return;
     }
@@ -51,23 +57,24 @@
         agg.set(t, a);
       });
       const ts = Array.from(agg.keys()).sort(function (a, b) { return a - b; });
+      const label = App.product(p);
       lines.push({
-        type: 'scatter', mode: 'lines+markers', name: p,
+        type: 'scatter', mode: 'lines+markers', name: label,
         x: ts.map(function (t) { return monthToDate(d.base_year, t); }),
         y: ts.map(function (t) { const a = agg.get(t); return a[0] / a[1]; }),
         line: { color: colorOf[p] }, marker: { color: colorOf[p] },
-        hovertemplate: '<b>' + App.esc(p) + '</b><br>%{x|%B %Y}<br>%{y:,.1f} FCFA/kg<extra></extra>',
+        hovertemplate: '<b>' + App.esc(label) + '</b><br>%{x|%B %Y}<br>%{y:,.1f} FCFA/kg<extra></extra>',
       });
     }
     if (!lines.length) {
-      App.plot(lineEl, [], App.layout({ title: { text: 'Aucune donnée disponible' } }));
+      App.plot(lineEl, [], App.layout({ title: { text: App.t('price.noData') } }));
       App.plot(boxEl, [], App.layout({}));
       return;
     }
     App.plot(lineEl, lines, App.layout(Object.assign({}, common, {
-      title: { text: 'Prix des denrées sélectionnées' + (App.isNarrow(lineEl) ? '<br>' : ' ') + '(' + App.esc(zone) + ')' },
-      xaxis: { title: { text: narrow ? '' : 'Date' }, type: 'date' },
-      yaxis: { title: { text: 'Prix (FCFA/kg)' } },
+      title: { text: App.t('price.lineTitle', { sep: narrow ? '<br>' : ' ', zone: App.esc(zone) }) },
+      xaxis: { title: { text: narrow ? '' : App.t('price.date') }, type: 'date' },
+      yaxis: { title: { text: App.t('price.yaxis') } },
     })));
 
     // Boîtes : répartition de tous les prix mensuels, par zone et par denrée
@@ -78,45 +85,55 @@
         if (!s) return;
         for (const v of s.v) { x.push(z); y.push(v); }
       });
+      const label = App.product(p);
       return {
-        type: 'box', name: p, x: x, y: y, marker: { color: colorOf[p] }, line: { color: colorOf[p] },
+        type: 'box', name: label, x: x, y: y, marker: { color: colorOf[p] }, line: { color: colorOf[p] },
         boxpoints: 'outliers', offsetgroup: p, alignmentgroup: 'prix',
-        hovertemplate: '<b>' + App.esc(p) + '</b><br>%{x}<br>%{y:,.1f} FCFA/kg<extra></extra>',
+        hovertemplate: '<b>' + App.esc(label) + '</b><br>%{x}<br>%{y:,.1f} FCFA/kg<extra></extra>',
       };
     });
     App.plot(boxEl, boxes, App.layout(Object.assign({}, common, {
-      title: { text: App.isNarrow(boxEl) ? 'Distribution des prix<br>par zone et denrée' : 'Distribution des prix par zone et denrée' },
+      title: { text: App.t(App.isNarrow(boxEl) ? 'price.boxTitleNarrow' : 'price.boxTitle') },
       boxmode: 'group',
-      xaxis: { title: { text: narrow ? '' : 'Zone' }, type: 'category', categoryorder: 'array', categoryarray: d.zones },
-      yaxis: { title: { text: 'Prix (FCFA/kg)' } },
+      xaxis: { title: { text: narrow ? '' : App.t('price.zone') }, type: 'category', categoryorder: 'array', categoryarray: d.zones },
+      yaxis: { title: { text: App.t('price.yaxis') } },
       height: 450,
     })));
   }
 
   function graphsTab(pane, ctx) {
-    pane.innerHTML = '<div class="py-2">' + '<div class="spinner-border spinner-border-sm me-2"></div>Chargement…</div>';
+    pane.innerHTML = '<div class="py-2">' + '<div class="spinner-border spinner-border-sm me-2"></div>' + App.t('loading') + '</div>';
     return App.data('prix_series.json').then(function (d) {
       if (!ctx.alive()) return;
       const idx = decodeSeries(d);
-      const first = d.products[0];
+      const initial = memo.selected || [d.products[0]];
+      const zone0 = memo.zone || 'National';
+      // Liste triée selon la langue ; la valeur de chaque case reste le nom d'origine
+      const ordered = App.sortBy(d.products, App.product);
       pane.innerHTML = '<div class="card mb-3 mt-2"><div class="card-body"><div class="row g-2 p-2 align-items-start">'
-        + '<div class="col-12 col-md-auto"><div class="fw-bold p-2">Filtres Graphiques</div></div>'
-        + '<div class="col-12 col-md-5"><fieldset><legend class="visually-hidden">Denrées</legend>'
+        + '<div class="col-12 col-md-auto"><div class="fw-bold p-2">' + App.t('price.filters') + '</div></div>'
+        + '<div class="col-12 col-md-5"><fieldset><legend class="visually-hidden">' + App.t('price.commodities') + '</legend>'
         + '<div class="checklist" id="checklist-denree">'
-        + d.products.map(function (p, k) {
+        + ordered.map(function (p) {
+          const k = d.products.indexOf(p);
           return '<div class="form-check"><input class="form-check-input" type="checkbox" id="den-' + k + '" value="' + App.esc(p) + '"'
-            + (p === first ? ' checked' : '') + '><label class="form-check-label" for="den-' + k + '">' + App.esc(p) + '</label></div>';
+            + (initial.indexOf(p) >= 0 ? ' checked' : '') + '><label class="form-check-label" for="den-' + k + '">' + App.esc(App.product(p)) + '</label></div>';
         }).join('') + '</div></fieldset>'
-        + '<button type="button" class="btn btn-link btn-sm px-0" id="clear-denrees">Tout désélectionner</button></div>'
-        + '<div class="col-12 col-md-3"><label class="form-label small text-muted mb-1" for="dropdown-region">Zone</label>'
+        + '<button type="button" class="btn btn-link btn-sm px-0" id="clear-denrees">' + App.t('price.clear') + '</button></div>'
+        + '<div class="col-12 col-md-3"><label class="form-label small text-muted mb-1" for="dropdown-region">' + App.t('price.zone') + '</label>'
         + '<select class="form-select form-select-sm" id="dropdown-region">'
-        + d.zones.map(function (z) { return '<option' + (z === 'National' ? ' selected' : '') + '>' + App.esc(z) + '</option>'; }).join('')
+        + d.zones.map(function (z) { return '<option value="' + App.esc(z) + '"' + (z === zone0 ? ' selected' : '') + '>' + App.esc(z) + '</option>'; }).join('')
         + '</select></div></div></div></div>'
         + '<div id="price-graph" class="price-graph"></div>'
         + '<div id="box-plot" class="mt-3"></div>';
       function update() {
-        const selected = Array.from(pane.querySelectorAll('#checklist-denree input:checked')).map(function (i) { return i.value; });
-        drawGraphs(pane, d, idx, selected, pane.querySelector('#dropdown-region').value);
+        // ordre des denrées choisies : celui des données (couleurs stables quelle que soit la langue)
+        const checked = Array.from(pane.querySelectorAll('#checklist-denree input:checked')).map(function (i) { return i.value; });
+        const selected = d.products.filter(function (p) { return checked.indexOf(p) >= 0; });
+        const zone = pane.querySelector('#dropdown-region').value;
+        memo.selected = selected;
+        memo.zone = zone;
+        drawGraphs(pane, d, idx, selected, zone);
       }
       pane.querySelector('#checklist-denree').addEventListener('change', update);
       pane.querySelector('#dropdown-region').addEventListener('change', update);
@@ -131,21 +148,24 @@
   /* ---------- Onglet Cartes ---------- */
 
   function mapsTab(pane, ctx, cleanups) {
-    pane.innerHTML = '<div class="py-2"><div class="spinner-border spinner-border-sm me-2"></div>Chargement…</div>';
+    pane.innerHTML = '<div class="py-2"><div class="spinner-border spinner-border-sm me-2"></div>' + App.t('loading') + '</div>';
     return Promise.all([App.data('prix_prefectures.json'), App.data('prefectures.geojson')]).then(function (res) {
       if (!ctx.alive()) return;
       const P = res[0], gj = res[1];
       const products = P.products;
+      const orderedProducts = App.sortBy(products, App.product);
       const lastYear = P.years[P.years.length - 1];
       const prefIndex = {};
       P.prefectures.forEach(function (n, k) { prefIndex[n] = k; });
 
       pane.innerHTML = '<div class="card mb-3 mt-2"><div class="card-body"><div class="row g-2 p-2 align-items-center">'
-        + '<div class="col-auto"><div class="fw-bold p-2">Cartes des prix</div></div>'
-        + '<div class="col-auto"><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" id="switch-compare">'
-        + '<label class="form-check-label" for="switch-compare">Faire une comparaison</label></div></div>'
-        + '<div class="col-auto" id="same-scale-box" hidden><div class="form-check mb-0"><input class="form-check-input" type="checkbox" id="same-scale">'
-        + '<label class="form-check-label" for="same-scale">Même échelle de couleurs</label></div></div>'
+        + '<div class="col-auto"><div class="fw-bold p-2">' + App.t('price.maps.title') + '</div></div>'
+        + '<div class="col-auto"><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" id="switch-compare"'
+        + (memo.compare ? ' checked' : '') + '>'
+        + '<label class="form-check-label" for="switch-compare">' + App.t('price.compare') + '</label></div></div>'
+        + '<div class="col-auto" id="same-scale-box" hidden><div class="form-check mb-0"><input class="form-check-input" type="checkbox" id="same-scale"'
+        + (memo.sameScale ? ' checked' : '') + '>'
+        + '<label class="form-check-label" for="same-scale">' + App.t('price.sameScale') + '</label></div></div>'
         + '</div></div></div>'
         + '<div class="row g-2" id="map-container"></div>';
 
@@ -155,15 +175,17 @@
 
       function makeCard(n, init, colClass) {
         const col = App.h('<div class="' + colClass + '"><div class="price-map-card">'
-          + '<div class="row g-2 mb-2"><div class="col-sm-7"><label class="fw-bold" for="den-map-' + n + '">Denrée</label>'
+          + '<div class="row g-2 mb-2"><div class="col-sm-7"><label class="fw-bold" for="den-map-' + n + '">' + App.t('price.commodity') + '</label>'
           + '<select class="form-select form-select-sm" id="den-map-' + n + '">'
-          + products.map(function (p) { return '<option' + (p === init.product ? ' selected' : '') + '>' + App.esc(p) + '</option>'; }).join('')
-          + '</select></div><div class="col-sm-5"><label class="fw-bold" for="annee-map-' + n + '">Année</label>'
+          + orderedProducts.map(function (p) {
+            return '<option value="' + App.esc(p) + '"' + (p === init.product ? ' selected' : '') + '>' + App.esc(App.product(p)) + '</option>';
+          }).join('')
+          + '</select></div><div class="col-sm-5"><label class="fw-bold" for="annee-map-' + n + '">' + App.t('price.year') + '</label>'
           + '<select class="form-select form-select-sm" id="annee-map-' + n + '">'
           + P.years.map(function (y) { return '<option' + (y === init.year ? ' selected' : '') + '>' + y + '</option>'; }).join('')
           + '</select></div></div>'
           + '<div class="price-map-title"></div>'
-          + '<div class="price-map-wrapper"><div class="price-map" aria-label="Carte des prix par préfecture"></div></div>'
+          + '<div class="price-map-wrapper"><div class="price-map" aria-label="' + App.t('price.mapAria') + '"></div></div>'
           + '<div class="map-message text-danger fw-bold p-2" role="status"></div></div></div>');
         container.appendChild(col);
         const map = App.createMap(col.querySelector('.price-map'), { basemap: 'carto-positron' });
@@ -192,6 +214,8 @@
       function refreshAll() {
         const sameScale = cards.length > 1 && pane.querySelector('#same-scale').checked;
         const all = cards.map(cardValues);
+        memo.cards = all.map(function (a) { return { product: a.product, year: a.year }; });
+        memo.sameScale = pane.querySelector('#same-scale').checked;
         let gmin = Infinity, gmax = -Infinity;
         all.forEach(function (a) { a.values.forEach(function (v) { if (v !== null) { gmin = Math.min(gmin, v); gmax = Math.max(gmax, v); } }); });
         cards.forEach(function (card, k) { drawChoropleth(card, all[k], sameScale ? [gmin, gmax] : null); });
@@ -201,9 +225,9 @@
         const vals = sel.values.filter(function (v) { return v !== null; });
         const title = card.col.querySelector('.price-map-title');
         const msg = card.col.querySelector('.map-message');
-        title.textContent = 'Prix moyen de ' + sel.product + ' - ' + sel.year;
+        title.textContent = App.t('price.mapTitle', { p: App.product(sel.product), y: sel.year });
         if (!vals.length) {
-          msg.textContent = 'Aucune donnée disponible';
+          msg.textContent = App.t('price.noData');
           card.layer.setStyle({ weight: 1, color: '#9CA3AF', fillOpacity: 0 });
           card.layer.eachLayer(function (l) { l.unbindTooltip(); });
           card.legend.getContainer().hidden = true;
@@ -220,32 +244,37 @@
           l.setStyle(has
             ? { fillColor: App.viridis((v - min) / span), fillOpacity: 0.85, color: '#444', weight: 1, dashArray: null }
             : { fillOpacity: 0, color: '#9CA3AF', weight: 1, dashArray: '3 3' });
-          l.unbindTooltip();
-          l.bindTooltip('<b>' + App.esc(name) + '</b><br>' + (has ? 'Prix (FCFA/kg) : ' + App.fmt(v, 1) : 'Pas de prix relevé'),
-            { sticky: true, direction: 'top', className: 'price-tooltip' });
+          // (on retire d'abord les anciens écouteurs, puis on ajoute l'infobulle et la mise en évidence)
           l.off('mouseover mouseout');
+          l.unbindTooltip();
+          l.bindTooltip('<b>' + App.esc(name) + '</b><br>' + (has ? App.t('price.tooltip', { v: App.fmt(v, 1) }) : App.t('price.noPrice')),
+            { sticky: true, direction: 'top', className: 'price-tooltip' });
           l.on('mouseover', function () { l.setStyle({ weight: 2.5, color: '#111' }); l.bringToFront(); });
           l.on('mouseout', function () { l.setStyle({ weight: 1, color: has ? '#444' : '#9CA3AF' }); });
         });
         const ticks = App.niceTicks(min, max, 5).map(function (v) { return { v: v, label: App.fmt(v, 0) }; });
         const div = card.legend.getContainer();
         div.hidden = false;
-        div.innerHTML = '<div class="legend-group">' + App.colorbarHTML({ title: 'Prix (FCFA/kg)', min: min, max: max, ticks: ticks }) + '</div>';
+        div.innerHTML = '<div class="legend-group">' + App.colorbarHTML({ title: App.t('price.cb'), min: min, max: max, ticks: ticks }) + '</div>';
       }
 
       function layout(compare) {
-        const keep = cards.length ? cardValues(cards[0]) : { product: products[0], year: lastYear };
+        memo.compare = compare;
+        const saved = memo.cards;
+        const keep = cards.length ? cardValues(cards[0]) : (saved && saved[0]) || { product: products[0], year: lastYear };
+        const second = (compare && saved && saved[1] && !cards.length) ? saved[1]
+          : { product: keep.product, year: P.years[Math.max(0, P.years.indexOf(keep.year) - 1)] };
         while (cards.length) { const c = cards.pop(); c.map.remove(); c.col.remove(); }
         const colClass = compare ? 'col-12 col-lg-6' : 'col-12';
         cards.push(makeCard(1, keep, colClass));
-        if (compare) cards.push(makeCard(2, { product: keep.product, year: P.years[Math.max(0, P.years.indexOf(keep.year) - 1)] }, colClass));
+        if (compare) cards.push(makeCard(2, second, colClass));
         pane.querySelector('#same-scale-box').hidden = !compare;
         refreshAll();
       }
 
       pane.querySelector('#switch-compare').addEventListener('change', function (e) { layout(e.target.checked); });
       pane.querySelector('#same-scale').addEventListener('change', refreshAll);
-      layout(false);
+      layout(memo.compare);
       cleanups.push(function () { cards.forEach(function (c) { c.map.remove(); }); });
     });
   }
@@ -253,21 +282,23 @@
   /* ---------- Page ---------- */
 
   App.pages['/price'] = {
-    title: 'Carte des Prix',
+    titleKey: 'page.price',
     render: function (ctx) {
       const el = ctx.el;
       const cleanups = [];
-      el.innerHTML = '<h3>Carte des Prix</h3>'
+      if (!(ctx.keepState && memo)) memo = freshMemo();
+      el.innerHTML = '<h3>' + App.t('page.price') + '</h3>'
         + '<div class="card mb-3"><div class="card-header bg-white border-bottom-0 pb-0">'
         + '<ul class="nav nav-tabs card-header-tabs" role="tablist">'
-        + '<li class="nav-item" role="presentation"><button type="button" class="nav-link active" role="tab" id="tab-graphs" aria-controls="pane-graphs" aria-selected="true" data-tab="graphs">Graphiques</button></li>'
-        + '<li class="nav-item" role="presentation"><button type="button" class="nav-link" role="tab" id="tab-maps" aria-controls="pane-maps" aria-selected="false" data-tab="maps">Cartes</button></li>'
+        + '<li class="nav-item" role="presentation"><button type="button" class="nav-link active" role="tab" id="tab-graphs" aria-controls="pane-graphs" aria-selected="true" data-tab="graphs">' + App.t('price.tab.graphs') + '</button></li>'
+        + '<li class="nav-item" role="presentation"><button type="button" class="nav-link" role="tab" id="tab-maps" aria-controls="pane-maps" aria-selected="false" data-tab="maps">' + App.t('price.tab.maps') + '</button></li>'
         + '</ul></div><div class="card-body pt-2">'
         + '<div id="pane-graphs" role="tabpanel" aria-labelledby="tab-graphs"></div>'
         + '<div id="pane-maps" role="tabpanel" aria-labelledby="tab-maps" hidden></div>'
         + '</div></div>';
       const loaded = {};
       function open(tab) {
+        memo.tab = tab;
         el.querySelectorAll('[data-tab]').forEach(function (b) {
           const on = b.dataset.tab === tab;
           b.classList.toggle('active', on);
@@ -281,7 +312,9 @@
         p.catch(function (err) { if (ctx.alive()) pane.innerHTML = App.errorBox(err); });
       }
       el.querySelectorAll('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { open(b.dataset.tab); }); });
+      const startTab = memo.tab;
       open('graphs');
+      if (startTab === 'maps') open('maps');
       return function cleanup() { cleanups.forEach(function (f) { f(); }); };
     },
   };

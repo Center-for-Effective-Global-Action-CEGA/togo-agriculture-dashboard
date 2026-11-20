@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mosaiks</title>
-  <meta name="description" content="Mosaiks – plateforme de visualisation des prédictions agricoles au Togo. Version de démonstration : données simulées.">
+  <meta name="description" content="Mosaiks – agricultural predictions visualization platform for Togo (demonstration version, simulated data) / plateforme de visualisation des prédictions agricoles au Togo (version de démonstration, données simulées).">
   <meta name="theme-color" content="#006A4A">
   <link rel="icon" type="image/png" href="assets/img/logos/lion.png">
   <link rel="stylesheet" href="lib/fonts/inter.css">
@@ -42,24 +42,24 @@
 <symbol id="bi-tree" viewBox="0 0 16 16"><path d="M8.416.223a.5.5 0 0 0-.832 0l-3 4.5A.5.5 0 0 0 5 5.5h.098L3.076 8.735A.5.5 0 0 0 3.5 9.5h.191l-1.638 3.276a.5.5 0 0 0 .447.724H7V16h2v-2.5h4.5a.5.5 0 0 0 .447-.724L12.31 9.5h.191a.5.5 0 0 0 .424-.765L10.902 5.5H11a.5.5 0 0 0 .416-.777zM6.437 4.758A.5.5 0 0 0 6 4.5h-.066L8 1.401 10.066 4.5H10a.5.5 0 0 0-.424.765L11.598 8.5H11.5a.5.5 0 0 0-.447.724L12.69 12.5H3.309l1.638-3.276A.5.5 0 0 0 4.5 8.5h-.098l2.022-3.235a.5.5 0 0 0 .013-.507"/></symbol>
 <symbol id="bi-x-lg" viewBox="0 0 16 16"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></symbol>
 </svg>
-<a class="skip-link" href="#page">Aller au contenu</a>
+<a class="skip-link" href="#page" data-i18n="skip">Skip to content</a>
 
 <div class="app-shell">
   <!-- Menu de gauche : logo et nom du ministère, puis les liens -->
-  <aside id="sidebar" class="sidebar" aria-label="Menu">
+  <aside id="sidebar" class="sidebar" aria-label="Menu" data-i18n-attr="aria-label:nav.menu">
     <div class="sidebar-brand">
       <img src="assets/img/logos/lion.png" class="sidebar-logo" alt="">
-      <div class="sidebar-brand-text">Ministère de l'Agriculture, de la Pêche, des Ressources Animales et de la Souveraineté Alimentaire</div>
+      <div class="sidebar-brand-text" data-i18n="brand.ministry">Ministry of Agriculture, Fisheries, Animal Resources and Food Sovereignty</div>
     </div>
-    <nav class="sidebar-nav" aria-label="Pages principales">
-      <a class="sidebar-link" href="#/" data-route="/"><svg class="bi" aria-hidden="true"><use href="#bi-grid-1x2-fill"></use></svg><span>Tableau de bord</span></a>
-      <a class="sidebar-link" href="#/predictions" data-route="/predictions"><svg class="bi" aria-hidden="true"><use href="#bi-graph-up"></use></svg><span>Prédictions</span></a>
-      <a class="sidebar-link" href="#/price" data-route="/price"><svg class="bi" aria-hidden="true"><use href="#bi-currency-dollar"></use></svg><span>Carte des Prix</span></a>
-      <a class="sidebar-link" href="#/ndvi-map" data-route="/ndvi-map"><svg class="bi" aria-hidden="true"><use href="#bi-bell"></use></svg><span>Indices de Végétation</span></a>
+    <nav class="sidebar-nav" aria-label="Main pages" data-i18n-attr="aria-label:nav.main">
+      <a class="sidebar-link" href="#/" data-route="/"><svg class="bi" aria-hidden="true"><use href="#bi-grid-1x2-fill"></use></svg><span data-i18n="page.dashboard">Dashboard</span></a>
+      <a class="sidebar-link" href="#/predictions" data-route="/predictions"><svg class="bi" aria-hidden="true"><use href="#bi-graph-up"></use></svg><span data-i18n="page.predictions">Predictions</span></a>
+      <a class="sidebar-link" href="#/price" data-route="/price"><svg class="bi" aria-hidden="true"><use href="#bi-currency-dollar"></use></svg><span data-i18n="page.price">Price Map</span></a>
+      <a class="sidebar-link" href="#/ndvi-map" data-route="/ndvi-map"><svg class="bi" aria-hidden="true"><use href="#bi-bell"></use></svg><span data-i18n="page.ndvi">Vegetation Indices</span></a>
     </nav>
-    <nav class="sidebar-nav sidebar-nav-bottom" aria-label="Informations">
-      <a class="sidebar-link" href="#/modeles" data-route="/modeles"><svg class="bi" aria-hidden="true"><use href="#bi-file-earmark-text"></use></svg><span>Performances des modèles</span></a>
-      <a class="sidebar-link" href="#/aide" data-route="/aide"><svg class="bi" aria-hidden="true"><use href="#bi-question-circle"></use></svg><span>Aide &amp; Support</span></a>
+    <nav class="sidebar-nav sidebar-nav-bottom" aria-label="Information" data-i18n-attr="aria-label:nav.info">
+      <a class="sidebar-link" href="#/modeles" data-route="/modeles"><svg class="bi" aria-hidden="true"><use href="#bi-file-earmark-text"></use></svg><span data-i18n="page.models">Model Performance</span></a>
+      <a class="sidebar-link" href="#/aide" data-route="/aide"><svg class="bi" aria-hidden="true"><use href="#bi-question-circle"></use></svg><span data-i18n="page.help">Help &amp; Support</span></a>
     </nav>
   </aside>
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
@@ -67,27 +67,35 @@
   <div class="main">
     <!-- Barre du haut : bouton menu (téléphone), nom, sous-titre, avertissement -->
     <header class="topbar">
-      <button id="sidebar-toggle" class="sidebar-toggle" type="button" title="Menu" aria-label="Ouvrir le menu" aria-controls="sidebar" aria-expanded="false">
+      <button id="sidebar-toggle" class="sidebar-toggle" type="button" title="Menu" aria-label="Open the menu" data-i18n-attr="aria-label:nav.open" aria-controls="sidebar" aria-expanded="false">
         <svg class="bi" aria-hidden="true"><use href="#bi-list"></use></svg>
       </button>
       <div>
         <div class="topbar-title">Mosaiks</div>
-        <div class="topbar-subtitle">Plateforme de visualisation des prédictions agricoles</div>
+        <div class="topbar-subtitle" data-i18n="topbar.subtitle">Agricultural predictions visualization platform</div>
       </div>
       <div class="demo-banner" role="note">
         <svg class="bi demo-banner-icon" aria-hidden="true"><use href="#bi-exclamation-triangle-fill"></use></svg>
         <div>
-          <div class="demo-banner-title">Version de démonstration</div>
-          <div class="demo-banner-text">Cette plateforme présente des données et des prédictions à titre expérimental et ne doivent pas être utilisés pour la prise de décisions.</div>
+          <div class="demo-banner-title" data-i18n="demo.title">Demonstration version</div>
+          <div class="demo-banner-text" data-i18n="demo.text">This platform presents data and predictions for experimental purposes only; they must not be used for decision-making.</div>
         </div>
+      </div>
+      <!-- Sélecteur de langue -->
+      <div class="lang-switch" role="group" aria-label="Language / Langue">
+        <button type="button" data-lang="fr" lang="fr" title="Français" aria-pressed="false">
+          <svg class="flag" viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>FR</button>
+        <span class="lang-sep" aria-hidden="true">|</span>
+        <button type="button" data-lang="en" lang="en" title="English" aria-pressed="true" class="active">
+          <svg class="flag" viewBox="0 0 60 30" aria-hidden="true"><clipPath id="uk-flag-s"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="uk-flag-t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#uk-flag-s)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#uk-flag-t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg>EN</button>
       </div>
     </header>
 
     <main id="page" class="page-content" tabindex="-1">
       <noscript>
-        <div class="alert alert-warning">Ce tableau de bord a besoin de JavaScript pour fonctionner. Merci de l'activer dans votre navigateur.</div>
+        <div class="alert alert-warning">This dashboard requires JavaScript. Please enable it in your browser. / Ce tableau de bord a besoin de JavaScript pour fonctionner. Merci de l'activer dans votre navigateur.</div>
       </noscript>
-      <div class="page-loading" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Chargement…</div>
+      <div class="page-loading" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Loading…</div>
     </main>
   </div>
 </div>
@@ -98,6 +106,8 @@
 <script src="lib/leaflet/leaflet.js" defer></script>
 <!-- Application -->
 <script src="js/app.js" defer></script>
+<script src="js/i18n/en.js" defer></script>
+<script src="js/i18n/fr.js" defer></script>
 <script src="js/maps.js" defer></script>
 <script src="js/pages/dashboard.js" defer></script>
 <script src="js/pages/predictions.js" defer></script>

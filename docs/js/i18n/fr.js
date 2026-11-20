@@ -1,0 +1,167 @@
+/* Dictionnaire français – French dictionary.
+ * Pour modifier un texte, changez la valeur à droite des deux-points ; gardez les {paramètres} tels quels.
+ * Les noms des denrées sont ceux des données : pas besoin de les traduire ici.
+ */
+window.App.I18N.fr = {
+  // Cadre : menu, barre du haut, avertissement
+  'skip': 'Aller au contenu',
+  'brand.ministry': 'Ministère de l\'Agriculture, de la Pêche, des Ressources Animales et de la Souveraineté Alimentaire',
+  'nav.menu': 'Menu',
+  'nav.main': 'Pages principales',
+  'nav.info': 'Informations',
+  'nav.open': 'Ouvrir le menu',
+  'page.dashboard': 'Tableau de bord',
+  'page.predictions': 'Prédictions',
+  'page.price': 'Carte des Prix',
+  'page.ndvi': 'Indices de Végétation',
+  'page.models': 'Performances des modèles',
+  'page.help': 'Aide & Support',
+  'page.notfound': 'Page introuvable',
+  'topbar.subtitle': 'Plateforme de visualisation des prédictions agricoles',
+  'demo.title': 'Version de démonstration',
+  'demo.text': 'Cette plateforme présente des données et des prédictions à titre expérimental et ne doivent pas être utilisés pour la prise de décisions.',
+  'loading': 'Chargement…',
+  'notfound.text': 'Cette page n\'existe pas.',
+  'notfound.back': 'Retour au tableau de bord',
+  'error.load': 'Impossible de charger les données.',
+  'error.file': 'Fichier introuvable : data/{path} (HTTP {status})',
+  'error.fileProtocol': 'Le site est ouvert directement depuis un fichier : les navigateurs bloquent alors la lecture des données. Publiez-le sur GitHub Pages ou lancez un petit serveur local (<code>python -m http.server</code> dans le dossier <code>docs/</code>), voir README.',
+  'error.libs': 'Les bibliothèques du site (dossier lib/) n\'ont pas pu être chargées.',
+
+  // Cartes (commun)
+  'map.zoomIn': 'Zoom avant',
+  'map.zoomOut': 'Zoom arrière',
+  'map.legendToggle': 'Cliquer pour masquer / afficher',
+  'map.loading': 'Chargement des données…',
+  'map.basemap': 'Fond de carte',
+  'map.esri': 'Imagerie &copy; Esri, Maxar, Earthstar Geographics',
+  'hover.pct': '<b>{v}</b> de surface cultivée<br>Région : {region}',
+  'crop.MAIS': '🌽 Maïs',
+  'crop.SOJA': '🌱 Soja',
+  'layer.agri': 'Agricoles',
+  'layer.nonagri': 'Non agricoles',
+  'layer.cultivated': 'Cultivées',
+  'legend.plots': 'Parcelles',
+  'legend.crops': 'Cultures',
+  'legend.yields': 'Rendements',
+
+  // Tableau de bord
+  'dash.kpi.crops': 'Cultures couvertes',
+  'dash.kpi.cropsValue': 'Maïs &amp; Soja',
+  'dash.kpi.area': 'Surfaces cultivées',
+  'dash.kpi.rain': 'Précipitations moyennes',
+  'dash.kpi.flow': 'Débit moyen',
+  'dash.areaChart': 'Superficie des cultures',
+  'dash.parcels': 'Parcelles cultivées (emblavées) — {q}',
+  'dash.prices': 'Prix moyens par culture ({year}, national)',
+  'dash.rain': 'Précipitations moyennes — {q}',
+  'dash.map.aria': 'Carte des parcelles',
+  'chart.cultivated': 'Cultivées',
+  'chart.maize': 'Maïs',
+  'chart.soy': 'Soja',
+  'chart.areaHover': '%{x}<br>{name} : %{y:,.0f} km²<extra></extra>',
+  'chart.crops': 'Cultures',
+  'chart.quarter': 'Trimestre',
+  'chart.area': 'Surface (km²)',
+  'table.commodity': 'Denrée',
+  'table.avgPrice': 'Prix moyen (FCFA/kg)',
+  'table.region': 'Région',
+  'table.rain': 'Hauteur (mm)',
+  'pager.label': 'Pages du tableau',
+  'pager.first': 'Première page',
+  'pager.prev': 'Page précédente',
+  'pager.next': 'Page suivante',
+  'pager.last': 'Dernière page',
+
+  // Prédictions
+  'pred.quarter': 'Trimestre',
+  'pred.sw.parcel': 'Parcelles',
+  'pred.sw.crop': 'Cultures',
+  'pred.sw.yield': 'Rendements',
+  'pred.export': 'Exporter',
+  'pred.map.aria': 'Carte des prédictions',
+  'pred.yieldCrop': 'Culture des rendements',
+  'pred.yieldOf': 'Rendement - {crop}',
+  'pred.recap': 'Récapitulatif',
+  'pred.recap.col1': 'Surfaces',
+  'pred.recap.col2': 'Superficie (km²)',
+  'pred.recap.col3': 'Superficie (%)',
+  'pred.recap.empty': 'Activez « Parcelles » ou « Cultures » pour afficher les surfaces.',
+  'pred.hint': 'Survolez (ou touchez) un point pour afficher ses valeurs. Cliquez sur une entrée de la légende pour masquer ou afficher la couche correspondante.',
+  'pred.hoverYield': '<b>Rendement</b> : {v} kg/ha<br>Région : {region}',
+  'pred.cbTitle': 'kg/ha (échelle log)',
+  'pred.ridge.none': 'Pas assez de rendements pour tracer les courbes.',
+  'pred.ridge.cells': '{n} cellules',
+  'pred.ridge.regions': 'Régions',
+  'pred.exportHint': 'Exporte : {what}, {q}',
+  'pred.what.yield': 'rendements ({crop})',
+  'pred.what.crop': 'cultures (maïs, soja)',
+  'pred.what.parcel': 'parcelles',
+  'pred.what.all': 'toutes les colonnes',
+
+  // Carte des prix
+  'price.tab.graphs': 'Graphiques',
+  'price.tab.maps': 'Cartes',
+  'price.filters': 'Filtres Graphiques',
+  'price.commodities': 'Denrées',
+  'price.clear': 'Tout désélectionner',
+  'price.zone': 'Zone',
+  'price.none': 'Aucune denrée sélectionnée',
+  'price.noData': 'Aucune donnée disponible',
+  'price.lineTitle': 'Prix des denrées sélectionnées{sep}({zone})',
+  'price.boxTitle': 'Distribution des prix par zone et denrée',
+  'price.boxTitleNarrow': 'Distribution des prix<br>par zone et denrée',
+  'price.date': 'Date',
+  'price.yaxis': 'Prix (FCFA/kg)',
+  'price.legend': 'Denrée',
+  'price.maps.title': 'Cartes des prix',
+  'price.compare': 'Faire une comparaison',
+  'price.sameScale': 'Même échelle de couleurs',
+  'price.commodity': 'Denrée',
+  'price.year': 'Année',
+  'price.mapTitle': 'Prix moyen de {p} - {y}',
+  'price.mapAria': 'Carte des prix par préfecture',
+  'price.tooltip': 'Prix (FCFA/kg) : {v}',
+  'price.noPrice': 'Pas de prix relevé',
+  'price.cb': 'Prix (FCFA/kg)',
+
+  // Indices de végétation
+  'ndvi.intro': 'Le NDVI et l\'EVI sont calculés à partir d\'images satellites : plus la valeur est élevée, plus la végétation est dense et verte. Cette carte est une application Google Earth Engine hébergée par Google.',
+  'ndvi.open': 'Ouvrir dans un nouvel onglet',
+  'ndvi.frameTitle': 'Indices de végétation NDVI et EVI (application Google Earth Engine)',
+  'ndvi.note': 'Si la carte reste vide, l\'application Earth Engine est peut-être indisponible ou bloquée par votre réseau : utilisez le bouton « Ouvrir dans un nouvel onglet ».',
+
+  // Performances des modèles
+  'models.h': 'Précision des modèles',
+  'models.list': 'Modèles',
+  'models.item': 'Modèle {n}',
+  'models.data': 'Données utilisées',
+  'models.algo': 'Algorithme',
+  'models.perf': 'Performance',
+  'models.perfLine': '{k} : {v}',
+  'models.todo': 'À compléter.',
+
+  // Aide & Support
+  'help.contactTitle': 'Des questions sur le dashboard ?',
+  'help.contactIntro': 'Merci de bien vouloir contacter le Togo Data Lab via les coordonnées suivantes :',
+  'help.email': 'Email :',
+  'help.phone': 'Téléphone :',
+  'help.useTitle': 'Utiliser le tableau de bord',
+  'help.useList': '<li><b>Tableau de bord</b> : chiffres clés du dernier trimestre, surfaces par trimestre, carte des parcelles, prix et précipitations.</li>'
+    + '<li><b>Prédictions</b> : choisissez un trimestre et activez les couches <i>Parcelles</i>, <i>Cultures</i> ou <i>Rendements</i>. '
+    + 'Survolez (ou touchez) un point pour voir ses valeurs ; cliquez sur la légende pour masquer une couche. '
+    + 'Le bouton <i>Exporter</i> télécharge les données affichées (CSV ou GeoJSON).</li>'
+    + '<li><b>Carte des Prix</b> : l\'onglet <i>Graphiques</i> montre l\'évolution mensuelle des prix ; l\'onglet <i>Cartes</i> montre '
+    + 'le prix moyen annuel par préfecture, avec une comparaison possible entre deux cartes.</li>'
+    + '<li><b>Indices de Végétation</b> : application Google Earth Engine (NDVI, EVI).</li>'
+    + '<li><b>Performances des modèles</b> : description des modèles et indicateurs calculés sur les données de démonstration.</li>',
+  'help.aboutTitle': 'À propos des données',
+  'help.aboutText': '<b>Version de démonstration.</b> Les prédictions, rendements, prix et données météo affichés sont des données '
+    + '<b>simulées</b> : ils ne décrivent pas la situation réelle et ne doivent pas servir à prendre des décisions. '
+    + 'Seules les limites administratives du Togo sont réelles.',
+  'help.sources': 'Fonds de carte : © OpenStreetMap, © CARTO, imagerie © Esri. Les valeurs affichées sont pré-calculées à partir des fichiers de l\'application d\'origine.',
+  'help.quarters': 'Trimestres disponibles : {q}. Données préparées le {d}.',
+
+  // Noms des denrées : ceux des données (rien à traduire)
+  'products': {},
+};

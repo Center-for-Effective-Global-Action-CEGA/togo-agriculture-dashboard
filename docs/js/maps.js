@@ -23,7 +23,8 @@
     'satellite': {
       label: 'Satellite',
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      options: { maxZoom: 18, attribution: 'Imagerie &copy; Esri, Maxar, Earthstar Geographics' },
+      options: { maxZoom: 18 },
+      attributionKey: 'map.esri',
     },
     'carto-positron': {
       label: 'Carto Positron',
@@ -46,7 +47,7 @@
       zoomControl: false,
       attributionControl: true,
     });
-    L.control.zoom({ position: opts.zoomPosition || 'topright', zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' }).addTo(map);
+    L.control.zoom({ position: opts.zoomPosition || 'topright', zoomInTitle: App.t('map.zoomIn'), zoomOutTitle: App.t('map.zoomOut') }).addTo(map);
     map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
     map.createPane('points').style.zIndex = 350;      // au-dessus du fond de carte, sous les contours
     map.fitBounds(App.TOGO_BOUNDS, { padding: [8, 8] });
@@ -54,7 +55,9 @@
     map.setBasemap = function (key) {
       const def = App.BASEMAPS[key] || App.BASEMAPS['open-street-map'];
       if (base) map.removeLayer(base);
-      base = L.tileLayer(def.url, def.options).addTo(map);
+      const options = Object.assign({}, def.options);
+      if (def.attributionKey) options.attribution = App.t(def.attributionKey);
+      base = L.tileLayer(def.url, options).addTo(map);
       return base;
     };
     map.setBasemap(opts.basemap || 'open-street-map');
@@ -302,7 +305,7 @@
         for (const it of g.items) {
           self._items[it.id] = it;
           s += '<button type="button" class="legend-item' + (it.hidden ? ' is-hidden' : '') + '" data-id="' + App.esc(it.id)
-            + '" aria-pressed="' + (!it.hidden) + '" title="Cliquer pour masquer / afficher">'
+            + '" aria-pressed="' + (!it.hidden) + '" title="' + App.esc(App.t('map.legendToggle')) + '">'
             + '<span class="legend-swatch" style="background:' + (it.swatch || it.color) + '"></span>' + App.esc(it.name) + '</button>';
         }
         if (g.colorbar) s += colorbarHTML(g.colorbar);
@@ -347,10 +350,11 @@
 
   /** Petit voile « Chargement… » posé sur une carte. */
   App.mapLoading = function (wrapper) {
-    const el = App.h('<div class="map-loading" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Chargement des données…</div>');
+    const el = App.h('<div class="map-loading" role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>'
+      + App.esc(App.t('map.loading')) + '</div>');
     wrapper.appendChild(el);
     return {
-      show: function (msg) { el.lastChild.textContent = msg || 'Chargement des données…'; el.hidden = false; },
+      show: function (msg) { el.lastChild.textContent = msg || App.t('map.loading'); el.hidden = false; },
       hide: function () { el.hidden = true; },
     };
   };
