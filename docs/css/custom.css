@@ -1,0 +1,539 @@
+/* Style de toute l'application (couleurs, menu, cartes, tableaux…).
+   Les couleurs et les tailles principales sont réglées une seule fois ci-dessous,
+   dans « :root ». Pour changer le vert partout, il suffit de modifier --brand. */
+
+/* Réglages principaux : couleurs, largeur du menu, hauteur de la barre du haut, arrondis, ombre */
+:root {
+    --brand: #006A4A;
+    --brand-dark: #00553B;
+    --brand-soft: #E6F2EE;
+    --text: #1F2937;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+    --bg: #F5F6F8;
+    --surface: #FFFFFF;
+    --sidebar-width: 230px;
+    --topbar-height: 64px;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+}
+
+/* Menu de gauche */
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 1040;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--topbar-height);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+    width: 34px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-brand-text {
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 12px;
+}
+
+.sidebar-nav-bottom {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: #4B5563;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link i {
+    font-size: 17px;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-link:hover {
+    background: var(--brand-soft);
+    color: var(--brand);
+}
+
+.sidebar-link.active {
+    background: var(--brand);
+    color: #fff;
+    box-shadow: var(--shadow);
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+/* Partie principale : barre du haut et contenu de la page */
+.main {
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--topbar-height);
+    padding: 10px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar-title {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.topbar-subtitle {
+    font-size: 12.5px;
+    color: #374151;
+}
+
+/* Bandeau « Version de démonstration » à droite de la barre du haut */
+.demo-banner {
+    margin-left: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 420px;
+    padding: 8px 14px;
+    border: 1px solid #F5D08A;
+    border-left: 4px solid #D97706;
+    border-radius: var(--radius);
+    background: #FFF8EB;
+    color: #78350F;
+}
+
+.demo-banner-icon {
+    color: #D97706;
+    font-size: 16px;
+    line-height: 1.3;
+}
+
+.demo-banner-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.demo-banner-text {
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.sidebar-toggle {
+    display: none;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+    color: var(--text);
+}
+
+.page-content {
+    flex: 1;
+    padding: 24px;
+}
+
+.page-content h3 {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 1rem;
+}
+
+.page-content h1 {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 24px;
+}
+
+/* Éléments communs : encadrés, boutons, interrupteurs, onglets, liens */
+.card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.btn-primary,
+.dropdown-toggle.btn-primary {
+    background-color: var(--brand);
+    border-color: var(--brand);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--brand-dark);
+    border-color: var(--brand-dark);
+}
+
+.form-check-input:checked {
+    background-color: var(--brand);
+    border-color: var(--brand);
+}
+
+.nav-tabs .nav-link.active,
+.nav-pills .nav-link.active {
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.nav-tabs .nav-link {
+    color: var(--text-muted);
+}
+
+a {
+    color: var(--brand);
+}
+
+/* Tableaux de données : fond gris clair pour la ligne de titres */
+.dash-table-container .dash-spreadsheet-container th {
+    background: #F9FAFB !important;
+    color: var(--text);
+}
+
+/* Page « Tableau de bord » : encadrés de chiffres clés et titres des blocs */
+.kpi-card .card-body {
+    padding: 14px 16px;
+}
+
+.kpi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.kpi-label {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.kpi-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 19px;
+}
+
+.kpi-delta {
+    min-height: 18px;
+    margin-top: 6px;
+    font-size: 11.5px;
+}
+
+.kpi-delta.down {
+    color: #F59E0B;
+}
+
+.kpi-delta.up {
+    color: #059669;
+}
+
+.section-card .section-header {
+    background: #F9FAFB;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 10px 14px;
+}
+
+/* Page « Prédictions » : barre de filtres, carte et panneau « Récapitulatif » */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 28px;
+    margin-bottom: 14px;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-label {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.quarter-dropdown {
+    width: 130px;
+}
+
+.pred-switch {
+    margin: 0;
+    font-weight: 500;
+}
+
+.pred-switch .form-check-input {
+    cursor: pointer;
+}
+
+.map-wrapper {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.pred-map {
+    height: calc(100vh - var(--topbar-height) - 190px);
+    min-height: 480px;
+}
+
+.map-controls {
+    position: absolute;
+    top: 10px;
+    right: 60px;
+    width: 190px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 5;
+}
+
+.recap-panel {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 300px;
+    max-height: calc(100% - 24px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(16, 24, 40, 0.12);
+    z-index: 5;
+}
+
+.recap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Page « Performances des modèles » : liste à gauche, détail à droite */
+.model-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background: #F3F4F6;
+    border-radius: var(--radius);
+}
+
+.model-item {
+    padding: 12px 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.model-item:hover {
+    box-shadow: var(--shadow);
+}
+
+.model-item.active {
+    border-left-color: var(--brand);
+}
+
+.model-item-title {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.model-item-sub {
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.model-item.active .model-item-title,
+.model-item.active .model-item-sub {
+    color: var(--brand);
+}
+
+.model-detail .card-body {
+    padding: 24px 28px;
+    max-height: calc(100vh - var(--topbar-height) - 140px);
+    overflow-y: auto;
+}
+
+.model-title {
+    color: var(--brand);
+    font-weight: 600;
+    margin-bottom: 14px;
+}
+
+.model-detail h5 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 18px;
+}
+
+/* Pages « Indices de Végétation » et « Aide & Support » */
+.ndvi-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.ndvi-frame {
+    display: block;
+    width: 100%;
+    height: calc(100vh - var(--topbar-height) - 120px);
+    min-height: 520px;
+    border: none;
+}
+
+.support-card .card-body {
+    padding: 24px 28px;
+}
+
+.support-card p {
+    color: #4B5563;
+}
+
+/* Petits écrans (téléphone, tablette, moins de 992 pixels de large) :
+   le menu se cache et s'ouvre avec le bouton en haut à gauche */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar.open + .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.4);
+        z-index: 1035;
+    }
+
+    .main {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .topbar {
+        padding: 10px 16px;
+    }
+
+    /* Sur petit écran, on garde seulement le titre du bandeau */
+    .demo-banner {
+        padding: 6px 10px;
+        align-items: center;
+    }
+
+    .demo-banner-text {
+        display: none;
+    }
+
+    .page-content {
+        padding: 16px;
+    }
+
+    .recap-panel {
+        position: static;
+        width: auto;
+        margin: 10px;
+    }
+
+    .map-controls {
+        right: 10px;
+        width: 160px;
+    }
+}
+
+/* Note « Version de démonstration » (page Performances des modèles) */
+.demo-note {
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background: #F9FAFB;
+    color: #4B5563;
+}

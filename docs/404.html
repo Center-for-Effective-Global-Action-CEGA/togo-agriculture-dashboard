@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page introuvable – Mosaiks</title>
+  <meta name="robots" content="noindex">
+  <script>
+    /* GitHub Pages affiche cette page pour une adresse inconnue.
+       Les anciennes adresses de l'application Dash (…/predictions, …/price…) sont redirigées
+       vers les nouvelles (…/#/predictions, …/#/price…). */
+    (function () {
+      var path = location.pathname.replace(/\/+$/, '');
+      var m = path.match(/^(.*)\/(predictions|price|ndvi-map|modeles|aide)$/);
+      if (m) location.replace(m[1] + '/#/' + m[2]);
+    })();
+  </script>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #F5F6F8; color: #1F2937;
+           display: flex; min-height: 100vh; align-items: center; justify-content: center; margin: 0; }
+    .box { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: 28px 32px; max-width: 420px; }
+    a { color: #006A4A; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1 style="font-size:20px;margin-top:0">Page introuvable</h1>
+    <p>Cette adresse n'existe pas sur le tableau de bord Mosaiks.</p>
+    <p><a id="home" href="/">Retour au tableau de bord</a></p>
+  </div>
+  <script>
+    // Lien vers l'accueil du site, y compris quand il est publié dans un sous-dossier (…github.io/nom-du-repo/)
+    (function () {
+      var seg = location.pathname.split('/').filter(Boolean);
+      if (/\.github\.io$/.test(location.hostname) && seg.length) {
+        document.getElementById('home').href = '/' + seg[0] + '/';
+      }
+    })();
+  </script>
+</body>
+</html>

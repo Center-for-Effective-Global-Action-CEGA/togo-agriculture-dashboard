@@ -1,0 +1,277 @@
+/* Compléments de style pour la version statique.
+   Le style d'origine (custom.css) est conservé tel quel ; ce fichier ajoute seulement ce qui
+   remplace les composants Dash (icônes SVG, tableaux, cartes Leaflet, légendes…). */
+
+/* Icônes (Bootstrap Icons en SVG, intégrées dans index.html) */
+.bi {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    vertical-align: -0.125em;
+    flex-shrink: 0;
+}
+
+.sidebar-link .bi {
+    width: 17px;
+    height: 17px;
+    margin: 0 1.5px;
+}
+
+.sidebar-toggle .bi { width: 20px; height: 20px; }
+.demo-banner-icon { width: 16px; height: 16px; margin-top: 2px; }
+.kpi-icon .bi { width: 19px; height: 19px; }
+
+/* Lien d'accès direct au contenu (clavier) */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 8px;
+    z-index: 2000;
+    background: var(--brand);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+}
+.skip-link:focus { left: 8px; }
+
+.page-content:focus { outline: none; }
+
+.sidebar-link:focus-visible,
+.model-item:focus-visible,
+.legend-item:focus-visible,
+.recap-header:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.page-loading {
+    color: var(--text-muted);
+    padding: 24px 0;
+}
+
+/* Tableaux (remplacent les DataTable de Dash, style « list view ») */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-family: "Inter", system-ui, sans-serif;
+}
+.data-table th {
+    font-weight: 600;
+    background: #F3F4F6;
+    text-align: center;
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+}
+.data-table td {
+    text-align: center;
+    padding: 8px;
+    border-bottom: 1px solid #EEF0F3;
+}
+.data-table tbody tr:hover td { background: #FAFAFB; }
+.data-table.recap th { background: #fff; }
+.data-table.recap th,
+.data-table.recap td { padding: 6px 10px; border: none; }
+
+.pager {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+}
+.pager-text {
+    min-width: 54px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Graphiques */
+.chart-340 { height: 340px; }
+.price-graph { height: 70vh; min-height: 380px; }
+
+/* Cartes Leaflet */
+.leaflet-container {
+    font-family: "Inter", system-ui, sans-serif;
+    background: #E5E7EB;
+}
+.mini-map-wrapper,
+.price-map-wrapper {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.mini-map { height: 340px; }
+.pred-map { z-index: 0; }
+.price-map {
+    height: 75vh;
+    min-height: 420px;
+}
+.price-map-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+}
+.price-map-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #2a3f5f;
+}
+.map-wrapper .recap-panel,
+.map-wrapper .map-controls { z-index: 1000; }
+
+.map-loading {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1100;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    box-shadow: var(--shadow);
+    font-weight: 500;
+}
+.map-loading[hidden] { display: none; }
+.map-error {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 1100;
+}
+
+/* Infobulle au survol des points (même allure que celle de Plotly) */
+.map-hover {
+    position: absolute;
+    z-index: 1200;
+    pointer-events: none;
+    padding: 5px 9px;
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Légende des cartes (cliquable, comme la légende Plotly) */
+.map-legend {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+    max-width: 230px;
+    box-shadow: 0 1px 4px rgba(16, 24, 40, 0.12);
+}
+.map-legend[hidden] { display: none; }
+.legend-group + .legend-group { margin-top: 6px; }
+.legend-title { font-weight: 600; margin-bottom: 2px; }
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: none;
+    border: 0;
+    padding: 2px 2px 2px 6px;
+    text-align: left;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 4px;
+}
+.legend-item:hover { background: #F3F4F6; }
+.legend-item.is-hidden { opacity: 0.45; }
+.legend-swatch {
+    width: 22px;
+    height: 10px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.legend-colorbar { margin-top: 6px; }
+.cb-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.cb-body { display: flex; gap: 6px; height: 130px; }
+.cb-bar { width: 14px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.15); }
+.cb-ticks { position: relative; min-width: 48px; font-size: 11px; color: #374151; }
+.cb-tick {
+    position: absolute;
+    left: 0;
+    transform: translateY(50%);
+    white-space: nowrap;
+}
+.cb-tick::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 1px;
+    background: #6B7280;
+    vertical-align: middle;
+    margin-right: 3px;
+}
+
+.price-tooltip { font-size: 13px; }
+
+/* Page Prédictions : sélecteurs posés sur la carte et panneau « Récapitulatif » */
+.map-controls .form-select { box-shadow: var(--shadow); }
+.map-controls [hidden] { display: none; }
+.recap-body[hidden] { display: none; }
+.recap-header .recap-chevron { width: 14px; height: 14px; }
+.parcel-ridgeplot { height: 300px; }
+.parcel-ridgeplot[hidden] { display: none; }
+.export-menu .dropdown-menu { min-width: 220px; }
+.export-hint { font-size: 12px; color: var(--text-muted); white-space: normal; }
+
+/* Page Carte des Prix */
+.checklist {
+    max-height: 100px;
+    overflow-y: auto;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.checklist .form-check { margin-bottom: 2px; }
+.nav-tabs .nav-link { cursor: pointer; }
+
+/* Page Indices de Végétation */
+.ndvi-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+/* Page Performances des modèles : les éléments de la liste sont des boutons */
+.model-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    color: inherit;
+    font: inherit;
+}
+
+/* Petits écrans */
+@media (max-width: 991.98px) {
+    .map-controls { right: 54px; width: 160px; }
+    .pred-map { min-height: 420px; height: 60vh; }
+    .recap-panel { max-height: none; }
+    .ndvi-toolbar { flex-direction: column; align-items: flex-start; }
+    .price-map { height: 60vh; }
+}
+
+@media (max-width: 575.98px) {
+    .topbar-title { font-size: 17px; }
+    .topbar-subtitle { display: none; }
+    .demo-banner { max-width: 60%; }
+    .filter-bar { gap: 10px 18px; }
+    .export-menu { margin-left: 0 !important; }
+    .map-legend { max-width: 170px; font-size: 12px; }
+}
